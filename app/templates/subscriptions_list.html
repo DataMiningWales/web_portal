@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscriptions - Data Mining Wales Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            margin: -20px -20px 20px -20px;
+        }
+        .nav {
+            background-color: #34495e;
+            padding: 10px;
+            margin: -20px -20px 20px -20px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        .nav a:hover {
+            background-color: #2c3e50;
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .status-pending { color: #f39c12; font-weight: bold; }
+        .status-approved { color: #27ae60; font-weight: bold; }
+        .status-rejected { color: #e74c3c; font-weight: bold; }
+        .action-btn {
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .approve-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        .reject-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .approve-btn:hover {
+            background-color: #229954;
+        }
+        .reject-btn:hover {
+            background-color: #c0392b;
+        }
+        .additional-data {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+    <script>
+        async function updateSubscriptionStatus(requestId, status) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`/admin/subscriptions/${requestId}/${status}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error updating subscription status');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h1>Subscription Management</h1>
+        <p>Logged in as: {{ admin_user }}</p>
+    </div>
+    
+    <div class="nav">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/subscriptions/view/">View Subscriptions</a>
+        <a href="/docs">API Documentation</a>
+    </div>
+
+    <div class="table-container">
+        <h2>All Subscription Requests</h2>
+        
+        {% if subscriptions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Organization</th>
+                        <th>Interests</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subscription in subscriptions %}
+                    <tr>
+                        <td>{{ subscription.email }}</td>
+                        <td>{{ subscription.name or '-' }}</td>
+                        <td>{{ subscription.organization or '-' }}</td>
+                        <td>{{ subscription.interests or '-' }}</td>
+                        <td class="status-{{ subscription.status }}">
+                            {{ subscription.status.upper() }}
+                        </td>
+                        <td>{{ subscription.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if subscription.status == 'pending' %}
+                                <button class="action-btn approve-btn" 
+                                        onclick="updateSubscriptionStatus('{{ subscription.request_id }}', 'approve')">
+                                    Approve
+                                </button>
+                                <button class="action-btn reject-btn" 
+                                        onclick="updateSubscriptionStatus('{{ subscription.request_id }}', 'reject')">
+                                    Reject
+                                </button>
+                            {% else %}
+                                <em>{{ subscription.status.title() }}</em>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No subscription requests found.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

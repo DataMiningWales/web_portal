@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Data Mining Wales</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            margin: -20px -20px 20px -20px;
+        }
+        .nav {
+            background-color: #34495e;
+            padding: 10px;
+            margin: -20px -20px 20px -20px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        .nav a:hover {
+            background-color: #2c3e50;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .subscription-list {
+            list-style: none;
+            padding: 0;
+        }
+        .subscription-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-pending { color: #f39c12; }
+        .status-approved { color: #27ae60; }
+        .status-rejected { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Data Mining Wales - Admin Dashboard</h1>
+        <p>Welcome, {{ admin_user }}</p>
+    </div>
+    
+    <div class="nav">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/subscriptions/view/">View Subscriptions</a>
+        <a href="/docs">API Documentation</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ recent_subscriptions|length }}</div>
+            <div>Recent Subscriptions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ recent_subscriptions|selectattr("status", "equalto", "pending")|list|length }}
+            </div>
+            <div>Pending Approval</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ recent_subscriptions|selectattr("status", "equalto", "approved")|list|length }}
+            </div>
+            <div>Approved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ recent_subscriptions|selectattr("status", "equalto", "rejected")|list|length }}
+            </div>
+            <div>Rejected</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Recent Subscription Requests</h2>
+        {% if recent_subscriptions %}
+            <ul class="subscription-list">
+                {% for subscription in recent_subscriptions %}
+                <li class="subscription-item">
+                    <div>
+                        <strong>{{ subscription.email }}</strong>
+                        {% if subscription.name %}
+                            - {{ subscription.name }}
+                        {% endif %}
+                        <br>
+                        <small>{{ subscription.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    <div class="status-{{ subscription.status }}">
+                        {{ subscription.status.upper() }}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            <p><a href="/admin/subscriptions/view/">View All Subscriptions →</a></p>
+        {% else %}
+            <p>No subscription requests yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
